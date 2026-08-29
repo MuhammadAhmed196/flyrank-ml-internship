@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Content Refresh Prioritization: A Validated Decision-Support Baseline</title>
+
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #5f6b7a;
+      --accent: #3157d5;
+      --border: #dfe4ec;
+      --soft: #eef2ff;
+      --good: #16794a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .container {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 40px 22px 80px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #172554, #3157d5);
+      color: white;
+      border-radius: 22px;
+      padding: 52px 48px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 40px rgba(26, 38, 72, 0.15);
+    }
+
+    header h1 {
+      margin: 0 0 18px;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+
+    header p {
+      margin: 10px 0;
+      max-width: 850px;
+      color: #e8ecff;
+      font-size: 1.05rem;
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      margin-bottom: 18px;
+    }
+
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 34px 34px;
+      margin-bottom: 22px;
+      box-shadow: 0 5px 22px rgba(20, 30, 50, 0.04);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #19284a;
+      font-size: 1.65rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    h3 {
+      color: #22345e;
+      margin-top: 28px;
+    }
+
+    p {
+      margin: 13px 0;
+    }
+
+    .abstract {
+      background: var(--soft);
+      border-left: 5px solid var(--accent);
+      padding: 22px 24px;
+      border-radius: 10px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .metric {
+      background: #fafbfe;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: 1.55rem;
+      font-weight: 700;
+    }
+
+    .result-box {
+      background: #f4faf7;
+      border: 1px solid #cce8d9;
+      border-left: 5px solid var(--good);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 11px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #f4f6fa;
+    }
+
+    .code-like {
+      background: #f4f6fa;
+      padding: 3px 7px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 0.92em;
+    }
+
+    ul {
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      color: var(--muted);
+      text-align: center;
+      padding: 24px 0 0;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 700px) {
+      header,
+      section {
+        padding: 26px 20px;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- =====================================================
+         TITLE + ABSTRACT
+         ===================================================== -->
+
+    <header>
+      <div class="tag">Research Paper · Content Refresh Prioritization</div>
+
+      <h1>
+        Content Refresh Prioritization:
+        A Transparent Baseline and Honest ML Evaluation
+      </h1>
+
+      <p>
+        A decision-support workflow for ranking content pages for
+        human refresh review using search visibility and freshness signals.
+      </p>
+
+      <p>
+        Prepared as a FlyRank ML Internship capstone project.
+      </p>
+    </header>
+
+    <section>
+      <h2>Abstract</h2>
+
+      <div class="abstract">
+        <p>
+          This study asks which content pages should be prioritized for
+          human review when editorial capacity for content refresh work is
+          limited. The workflow uses anonymized page-level search and
+          content signals and compares a transparent stale-and-visible
+          baseline with a Random Forest classifier. On the client-grouped
+          evaluation split, the baseline achieved a Precision@50 of
+          0.620, while the Random Forest achieved 0.560. A row-level random
+          split produced a substantially higher model Precision@50 of 0.880,
+          illustrating that validation design can materially change the
+          measured estimate. The current evidence therefore supports the
+          simpler baseline as the stronger decision-support approach on the
+          evaluated grouped split, while the results remain observational
+          and do not establish that refreshing a page causes traffic gains.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- =====================================================
+         1. INTRODUCTION / PROBLEM STATEMENT
+         ===================================================== -->
+
+    <section>
+      <h2>1. Introduction / Problem Statement</h2>
+
+      <p>
+        Content teams may have more pages available for review than they can
+        realistically inspect or refresh in a limited period. The practical
+        problem is therefore not simply to label pages, but to create a
+        ranked review queue that helps editors decide where to look first.
+      </p>
+
+      <p>
+        The research question is:
+        <strong>
+          Which content pages should be prioritized for human review for a
+          possible refresh, using page-level search visibility and freshness
+          signals available at the decision time?
+        </strong>
+      </p>
+
+      <p>
+        The intended decision is prioritization. A recommendation identifies
+        a page that may deserve human inspection; it does not automatically
+        authorize rewriting, publishing, deleting, redirecting, or otherwise
+        changing the page.
+      </p>
+
+      <p>
+        The project began with a transparent rule-based baseline and then
+        tested whether a learned model could provide better ranking quality
+        under an honest client-grouped evaluation.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         2. DATA
+         ===================================================== -->
+
+    <section>
+      <h2>2. Data</h2>
+
+      <p>
+        The analysis uses the FlyRank internship warehouse release and the
+        anonymized starter content-refresh data used throughout the project.
+        The main modelling window is March 2026, from
+        <span class="code-like">2026-03-01</span> through
+        <span class="code-like">2026-03-31</span>.
+      </p>
+
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="label">March fact rows</div>
+          <div class="value">9,841,378</div>
+        </div>
+
+        <div class="metric">
+          <div class="label">Clients</div>
+          <div class="value">55</div>
+        </div>
+
+        <div class="metric">
+          <div class="label">Content pages</div>
+          <div class="value">331,437</div>
+        </div>
+
+        <div class="metric">
+          <div class="label">Confirmed GSC rows</div>
+          <div class="value">3,611,061</div>
+        </div>
+
+        <div class="metric">
+          <div class="label">Confirmed GSC share</div>
+          <div class="value">36.69%</div>
+        </div>
+      </div>
+
+      <p>
+        The daily fact table was verified at the page-day grain:
+        the combination of report date, client identifier, and content
+        identifier was unique in the March slice. The selected data therefore
+        represents daily content-performance observations rather than a
+        pre-aggregated page-only table.
+      </p>
+
+      <p>
+        For modelling, decision-time features were built from:
+      </p>
+
+      <ul>
+        <li><span class="code-like">impressions_90d</span></li>
+        <li><span class="code-like">avg_position</span></li>
+        <li><span class="code-like">ctr</span></li>
+        <li><span class="code-like">content_age_days</span></li>
+        <li><span class="code-like">days_since_last_update</span></li>
+        <li><span class="code-like">word_count</span></li>
+      </ul>
+
+      <p>
+        Identifiers were retained only for joining and client-grouped
+        validation. Future-window outcomes, label-derived variables,
+        direct trend-answer fields, product-decision flags, and private
+        information were excluded from predictive inputs.
+      </p>
+
+      <p class="note">
+        Data is presented only in anonymized, public-safe form.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         3. METHODOLOGY
+         ===================================================== -->
+
+    <section>
+      <h2>3. Methodology</h2>
+
+      <h3>Target definition</h3>
+
+      <p>
+        For evaluation, a declining-performance proxy was defined from the
+        observed outcome window. A page was treated as declining when its
+        later search-performance outcome indicated a decline relative to
+        the relevant earlier period. This is a proxy for evaluation and is
+        not treated as a direct measure of content quality or a causal
+        outcome of refreshing a page.
+      </p>
+
+      <h3>Baseline</h3>
+
+      <p>
+        The baseline is intentionally simple. A page enters the strongest
+        refresh-review category when:
+      </p>
+
+      <ul>
+        <li>it has at least 180 days since its last update, and</li>
+        <li>it has at least 500 impressions in the last 90 days.</li>
+      </ul>
+
+      <p>
+        Qualifying pages are ranked by
+        <span class="code-like">impressions_90d</span>.
+        This produces a transparent rule that an editor can understand
+        without inspecting model internals.
+      </p>
+
+      <h3>Learned model</h3>
+
+      <p>
+        A Random Forest classifier was evaluated using the six
+        decision-time features listed above. Missing numeric values were
+        handled with median imputation inside the modelling pipeline.
+      </p>
+
+      <h3>Validation design</h3>
+
+      <p>
+        The primary validation design is a client-grouped holdout. Entire
+        clients are assigned to either training or test, preventing pages
+        from the same client from appearing in both groups.
+      </p>
+
+      <p>
+        The grouped evaluation used 25 training clients and 7 test clients,
+        with zero client overlap.
+      </p>
+
+      <h3>Leakage control</h3>
+
+      <p>
+        The workflow explicitly excluded label-derived information,
+        future outcomes, trend-answer fields, and product decision flags
+        from model inputs. A separate leakage audit found no forbidden
+        fields in the final predictive feature set.
+      </p>
+
+      <h3>Primary metric</h3>
+
+      <p>
+        Precision@50 is the main evaluation metric because the operational
+        output is a ranked review queue. The metric measures the fraction
+        of the top 50 ranked pages that are actually labelled as declining
+        under the evaluation proxy.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         4. RESULTS
+         ===================================================== -->
+
+    <section>
+      <h2>4. Results</h2>
+
+      <p>
+        The final comparison uses the same client-grouped evaluation setup
+        for the baseline and Random Forest.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Validation</th>
+            <th>Precision@50</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>Week-4 baseline</td>
+            <td>Client-grouped holdout</td>
+            <td><strong>0.620</strong></td>
+          </tr>
+
+          <tr>
+            <td>Week-5 Random Forest</td>
+            <td>Client-grouped holdout</td>
+            <td><strong>0.560</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="result-box">
+        <strong>Main measured result:</strong>
+        the Random Forest was 0.060 Precision@50 below the Week-4 baseline
+        on the client-grouped evaluation.
+      </div>
+
+      <h3>Validation sensitivity</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Validation design</th>
+            <th>Random Forest Precision@50</th>
+            <th>Average Precision</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>Row-level random split</td>
+            <td>0.880</td>
+            <td>0.733</td>
+          </tr>
+
+          <tr>
+            <td>Client-grouped holdout</td>
+            <td>0.560</td>
+            <td>0.576</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        The difference between the random and grouped evaluations shows
+        that the measured model performance is sensitive to validation
+        design. The grouped result is treated as the more conservative
+        estimate for this lane because client-specific patterns are not
+        allowed to cross the train/test boundary.
+      </p>
+
+      <h3>Feature interpretation</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Random Forest importance</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>impressions_90d</td>
+            <td>0.341</td>
+          </tr>
+          <tr>
+            <td>content_age_days</td>
+            <td>0.228</td>
+          </tr>
+          <tr>
+            <td>avg_position</td>
+            <td>0.217</td>
+          </tr>
+          <tr>
+            <td>word_count</td>
+            <td>0.102</td>
+          </tr>
+          <tr>
+            <td>ctr</td>
+            <td>0.061</td>
+          </tr>
+          <tr>
+            <td>days_since_last_update</td>
+            <td>0.050</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="note">
+        Feature importance describes how the fitted Random Forest used the
+        available variables. It should not be interpreted as causal effect.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         5. LIMITATIONS
+         ===================================================== -->
+
+    <section>
+      <h2>5. Limitations & Honest Framing</h2>
+
+      <ul>
+        <li>
+          This analysis does not establish that refreshing a page causes
+          traffic or ranking improvement.
+        </li>
+
+        <li>
+          The decline target is an observed proxy and may reflect seasonality,
+          demand changes, tracking differences, or other external factors.
+        </li>
+
+        <li>
+          The Random Forest was evaluated on one client-grouped holdout,
+          so the reported grouped result is not a guarantee of performance
+          on every future client or period.
+        </li>
+
+        <li>
+          The row-level random split produced a much more optimistic score,
+          demonstrating that validation design materially affects measured
+          performance.
+        </li>
+
+        <li>
+          The baseline uses only staleness and recent visibility and does not
+          capture all editorial, technical, business, or search-intent
+          context.
+        </li>
+
+        <li>
+          Some feature values may be missing or unevenly available across
+          pages.
+        </li>
+
+        <li>
+          The recommendation output is decision-support for human review,
+          not an automatic instruction to change content.
+        </li>
+      </ul>
+
+      <p>
+        These limitations are part of the result rather than an afterthought:
+        the practical value of the workflow depends on keeping its claims
+        narrower than the evidence permits.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         6. RANKED RECOMMENDATIONS
+         ===================================================== -->
+
+    <section>
+      <h2>6. Ranked Recommendations</h2>
+
+      <p>
+        The current recommendation queue uses the validated Week-4 baseline
+        because it outperformed the Random Forest on the client-grouped
+        evaluation.
+      </p>
+
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="label">Total pages</div>
+          <div class="value">30,000</div>
+        </div>
+
+        <div class="metric">
+          <div class="label">Refresh-review recommendations</div>
+          <div class="value">17</div>
+        </div>
+
+        <div class="metric">
+          <div class="label">Monitoring recommendations</div>
+          <div class="value">29,983</div>
+        </div>
+      </div>
+
+      <p>
+        The strongest action category is
+        <span class="code-like">refresh_review</span>, with reason code
+        <span class="code-like">stale_visible</span>. Pages meeting both
+        the staleness and visibility conditions are ranked by recent
+        impressions.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Action</th>
+            <th>Reason</th>
+            <th>Impressions (90d)</th>
+            <th>Days since update</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>61,678</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>2</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>59,472</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>3</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>25,715</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>4</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>13,299</td>
+            <td>193</td>
+          </tr>
+
+          <tr>
+            <td>5</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>7,812</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>6</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>7,558</td>
+            <td>193</td>
+          </tr>
+
+          <tr>
+            <td>7</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>4,590</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>8</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>4,556</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>9</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>4,429</td>
+            <td>194</td>
+          </tr>
+
+          <tr>
+            <td>10</td>
+            <td>refresh_review</td>
+            <td>stale_visible</td>
+            <td>1,697</td>
+            <td>193</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        These rows represent the highest-ranked candidates within the
+        observed queue. They still require human review before any action.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         7. REPRODUCIBILITY
+         ===================================================== -->
+
+    <section>
+      <h2>7. Reproducibility</h2>
+
+      <p>
+        The project is organized so the analysis can be inspected and
+        rerun through the project repository. The notebooks document the
+        progression from problem framing and data contract through baseline,
+        modelling, validation, and action playbook.
+      </p>
+
+      <h3>Project notebooks</h3>
+
+      <ul>
+        <li>
+          <a href="../work/notebooks/w01_research_question.ipynb">
+            Week 1 — Research question
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/w02_ml_task_framing.ipynb">
+            Week 2 — ML task framing
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/w03_data_contract.ipynb">
+            Week 3 — Data contract
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/w04_baseline_score.ipynb">
+            Week 4 — Baseline score
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/w05_model.ipynb">
+            Week 5 — Model
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/w06_validation_audit.ipynb">
+            Week 6 — Validation audit
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/w07_action_playbook.ipynb">
+            Week 7 — Action playbook
+          </a>
+        </li>
+
+        <li>
+          <a href="../work/notebooks/capstone.ipynb">
+            Capstone notebook
+          </a>
+        </li>
+      </ul>
+
+      <p>
+        The main repository is available here:
+        <a href="https://github.com/MuhammadAhmed196/flyrank-ml-internship">
+          GitHub repository
+        </a>
+      </p>
+
+      <p>
+        Reusable figures are stored under
+        <span class="code-like">work/figures/</span>, while metric receipts
+        and generated recommendation outputs are produced under
+        <span class="code-like">work/outputs/</span>.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         8. ACKNOWLEDGMENTS & DATA CREDIT
+         ===================================================== -->
+
+    <section>
+      <h2>8. Acknowledgments & Data Credit</h2>
+
+      <p>
+        This project was built as part of the FlyRank ML Internship using
+        the FlyRank internship dataset and project materials.
+      </p>
+
+      <p>
+        Data credit:
+        <strong>
+          Built on the FlyRank ML Internship dataset.
+        </strong>
+      </p>
+
+      <p>
+        FlyRank:
+        <a href="https://flyrank.ai" target="_blank" rel="noopener">
+          https://flyrank.ai
+        </a>
+      </p>
+
+      <p class="note">
+        The analysis and interpretation presented here are the author's
+        decision-support framing of the internship exercise and should not
+        be interpreted as a causal claim about search algorithms or content
+        refresh impact.
+      </p>
+    </section>
+
+
+    <!-- =====================================================
+         9. ML-12 / PROJECT COMMUNICATION
+         ===================================================== -->
+
+    <section>
+      <h2>9. Project Communication & Closing Notes</h2>
+
+      <h3>5-Minute Demo Outline</h3>
+
+      <ol>
+        <li>
+          Introduce the content-refresh prioritization problem and the
+          decision it supports.
+        </li>
+
+        <li>
+          Explain the anonymized data, page-level signals, and
+          decision-time feature set.
+        </li>
+
+        <li>
+          Show the transparent baseline and the Random Forest comparison.
+        </li>
+
+        <li>
+          Explain why client-grouped validation is more conservative than
+          the row-level random split.
+        </li>
+
+        <li>
+          Show the ranked review queue, human-review rules, and the major
+          limitations of the workflow.
+        </li>
+      </ol>
+
+      <h3>Social-Post Cut</h3>
+
+      <p>
+        I built a content-refresh prioritization workflow that turns
+        page-level search and freshness signals into a ranked human-review
+        queue. I compared a transparent baseline with a Random Forest and
+        found that the baseline currently performs better on the client-grouped
+        evaluation (Precision@50: 0.620 vs 0.560). The main lesson was that
+        honest validation and leakage checks matter as much as model choice.
+      </p>
+
+      <h3>Employer-Facing Summary</h3>
+
+      <p>
+        I built an end-to-end content-refresh prioritization workflow that
+        converts page-level search signals into a ranked review queue. I
+        evaluated a transparent rule-based baseline against a Random Forest
+        using client-grouped validation and found that the baseline currently
+        performs better on Precision@50. The project demonstrates practical
+        ML judgment through task framing, leakage auditing, validation design,
+        error analysis, and cautious interpretation of business-facing
+        recommendations.
+      </p>
+    </section>
+
+
+    <footer>
+      Content Refresh Prioritization · FlyRank ML Internship Capstone
+      <br>
+      Observational evidence · Decision-support framing · Public-safe presentation
+    </footer>
+
+  </div>
+</body>
+</html>
